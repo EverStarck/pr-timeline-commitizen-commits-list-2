@@ -8900,7 +8900,7 @@ const main = async () => {
      */
 
     // octokit get List commits on a pull request
-    const commits = await octokit.pulls.listCommits({
+    const commits = await octokit.rest.pulls.listCommits({
       owner,
       repo,
       pull_number,
