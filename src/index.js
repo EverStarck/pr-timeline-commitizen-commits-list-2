@@ -17,12 +17,6 @@ const main = async () => {
       pull_number,
     });
 
-    console.log(commits, "commits");
-
-    for (const commit of commits.data) {
-        console.log(commit.commit, "commit.commit");
-    }
-
     // Filter commits
     const commitizenKeys = {
       feat: "Features",
@@ -53,6 +47,7 @@ const main = async () => {
         history[match[3] || "General"] = {
           ...(history[match[3]] || []),
           [match[1]]: [
+            ...(history[match[3]]?.[match[1]] || []),
             {
               subject: match[4],
               sha: commit.sha,
