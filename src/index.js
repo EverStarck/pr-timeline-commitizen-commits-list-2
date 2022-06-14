@@ -38,10 +38,13 @@ const main = async () => {
      */
 
     // octokit get List commits on a pull request
-    const commits = await octokit.pulls.listCommits(repo, pull_number);
+    const commits = await octokit.pulls.listCommits({
+      owner,
+      repo,
+      pull_number,
+    });
     console.log(typeof commits, "commits type");
     console.log(commits, "commits");
-
 
     core.setOutput("pull-request-body", "yeyeyeyeyye");
   } catch (error) {
