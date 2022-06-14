@@ -3,55 +3,83 @@ const github = require("@actions/github");
 
 const main = async () => {
   try {
-    console.log("Hello World!");
-    /**
-     * We need to fetch all the inputs that were provided to our action
-     * and store them in variables for us to use.
-     **/
     const token = core.getInput("github-token", { required: true });
     const owner = core.getInput("owner", { required: true });
     const repo = core.getInput("repo", { required: true });
     const pull_number = core.getInput("pull_number", { required: true });
+    const update_body = core.getInput("update_body", { required: true });
 
-    /**
-     * Now we need to create an instance of Octokit which will use to call
-     * GitHub's REST API endpoints.
-     * We will pass the token as an argument to the constructor. This token
-     * will be used to authenticate our requests.
-     * You can find all the information about how to use Octokit here:
-     * https://octokit.github.io/rest.js/v18
-     **/
     const octokit = new github.getOctokit(token);
-
-    console.log(owner, "owner");
-    console.log(repo, "repo");
-    console.log(pull_number, "pull_number");
-
-    console.log("Hello World! 2");
-
-    /**
-     * We need to fetch the list of files that were changes in the Pull Request
-     * and store them in a variable.
-     * We use octokit.paginate() to automatically loop over all the pages of the
-     * results.
-     * Reference: https://octokit.github.io/rest.js/v18#pulls-list-files
-     */
-
     // octokit get List commits on a pull request
     const commits = await octokit.rest.pulls.listCommits({
       owner,
       repo,
       pull_number,
     });
-    console.log(commits, "commits");
+
+    // Filter commits
+    const commitizenKeys = {
+      feat: "Features",
+      fix: "Bug Fixes",
+      perf: "Performance Improvements",
+      docs: "Documentation",
+      test: "Tests",
+      refactor: "Code Refactoring",
+      build: "Internal Workflow",
+      ci: "Internal Workflow",
+      revert: "Reverts",
+      chore: "Chore",
+      style: "Style",
+    };
+    const regex = new RegExp(
+      `^(${Object.keys(commitizenKeys).join("|")})(\\((.+)\\))?: (.+\\S)`
+    );
+
+    const history = {};
 
     for (const commit of commits.data) {
-      console.log(commit.sha, "commit.sha");
-      console.log(commit.commit, "commit.commit");
-      console.log(commit.commit.message, "commit.commit.message");
+      const match = commit.commit.message.match(regex);
+
+      if (match) {
+        // Make first letter upper case
+        match[4] = match[4].charAt(0).toUpperCase() + match[4].slice(1);
+
+        history[match[3] || "General"] = {
+          ...(history[match[3]] || []),
+          [match[1]]: [
+            {
+              subject: match[4],
+              sha: commit.sha,
+            },
+          ],
+        };
+      }
     }
 
-    core.setOutput("pull-request-body", "yeyeyeyeyyee");
+    let result = "";
+
+    for (const key in history) {
+      result += `## ${key}\n\n`;
+      Object.keys(history[key]).forEach((action) => {
+        result += `### ${commitizenKeys[action]}\n\n`;
+        history[key][action].forEach((commit) => {
+          result += `- ${commit.subject} (${commit.sha})\n\n`;
+        });
+      });
+      result += "\n";
+    }
+
+    // Change pull request body
+    if (update_body) {
+      octokit.rest.pulls.update({
+        owner,
+        repo,
+        pull_number,
+        body: result,
+      });
+    }
+
+    core.setOutput("pull-request-body", result);
   } catch (error) {
     console.log("error");
     core.setFailed(error.message);
