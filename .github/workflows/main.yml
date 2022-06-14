@@ -14,5 +14,5 @@ jobs:
           repo: ${{ secrets.REPO }}
           pull_number: 1
       # Use the output from the `hello` step
-      - name: Get the output time
+      - name: Get the output time 
         run: echo "The time was ${{ steps.hello.outputs.pull-request-body }}"
