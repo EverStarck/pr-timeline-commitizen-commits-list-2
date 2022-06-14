@@ -41,11 +41,10 @@ const main = async () => {
 
         console.log("BRRR")
 
-        const prNumber = github.context.payload.pull_request.number;
-        const xd = JSON.stringify(github.context.payload)
-
-        console.log(xd, "Xd")
         console.log(github)
+        const xd = JSON.stringify(github.context.payload)
+        console.log(xd, "Xd")
+        const prNumber = github.context.payload.pull_request.number;
         console.log({ prNumber })
 
 
