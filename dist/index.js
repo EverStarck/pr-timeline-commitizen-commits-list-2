@@ -8879,6 +8879,12 @@ const main = async () => {
       pull_number,
     });
 
+    console.log(commits, "commits");
+
+    for (const commit of commits.data) {
+        console.log(commit.commit, "commit.commit");
+    }
+
     // Filter commits
     const commitizenKeys = {
       feat: "Features",
