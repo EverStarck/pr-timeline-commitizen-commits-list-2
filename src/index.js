@@ -51,7 +51,7 @@ const main = async () => {
       console.log(commit.commit.message, "commit.commit.message");
     }
 
-    core.setOutput("pull-request-body", "yeyeyeyeyye");
+    core.setOutput("pull-request-body", "yeyeyeyeyyee");
   } catch (error) {
     console.log("error");
     core.setFailed(error.message);
