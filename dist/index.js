@@ -8905,8 +8905,13 @@ const main = async () => {
       repo,
       pull_number,
     });
-    console.log(typeof commits, "commits type");
     console.log(commits, "commits");
+
+    for (const commit of commits.data) {
+      console.log(commit.sha, "commit.sha");
+      console.log(commit.commit, "commit.commit");
+      console.log(commit.commit.message, "commit.commit.message");
+    }
 
     core.setOutput("pull-request-body", "yeyeyeyeyye");
   } catch (error) {
