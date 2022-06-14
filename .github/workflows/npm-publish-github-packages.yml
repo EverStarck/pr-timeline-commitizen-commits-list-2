@@ -1,0 +1,18 @@
+on: [push]
+
+jobs:
+  hello_world_job:
+    runs-on: ubuntu-latest
+    name: A job to say hello
+    steps:
+      - name: Hello world action step
+        id: hello
+        uses: EverStarck/ pr-timeline-commitizen-commits-list-2@v1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          owner: ${{ secrets.OWNER }}
+          repo: ${{ secrets.REPO }}
+          pull_number: 1
+      # Use the output from the `hello` step
+      - name: Get the output time
+        run: echo "The time was ${{ steps.hello.outputs.pull-request-body }}"
