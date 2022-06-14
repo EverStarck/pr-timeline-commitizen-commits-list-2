@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Hello world action step
         id: hello
-        uses: EverStarck/pr-timeline-commitizen-commits-list-2@v2.2
+        uses: EverStarck/pr-timeline-commitizen-commits-list-2@v2.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           owner: ${{ secrets.OWNER }}
