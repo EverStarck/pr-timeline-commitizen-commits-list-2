@@ -38,16 +38,9 @@ const main = async () => {
          * results.
          * Reference: https://octokit.github.io/rest.js/v18#pulls-list-files
          */
-        const { data: changedFiles } = await octokit.rest.pulls.listFiles({
-            owner,
-            repo,
-            pull_number: pull_number,
-        });
 
-        console.log(changedFiles);
-        
         console.log("BRRR")
-        
+
         const prNumber = github.context.payload.pull_request.number;
         const xd = JSON.stringify(github.context.payload)
 
@@ -55,26 +48,14 @@ const main = async () => {
         console.log(github)
         console.log({ prNumber })
 
-        /**
-         * Contains the sum of all the additions, deletions, and changes
-         * in all the files in the Pull Request.
-         **/
-        let diffData = {
-            additions: 0,
-            deletions: 0,
-            changes: 0
-        };
 
-        // Reference for how to use Array.reduce():
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
-        diffData = changedFiles.reduce((acc, file) => {
-            acc.additions += file.additions;
-            acc.deletions += file.deletions;
-            acc.changes += file.changes;
-            return acc;
-        }, diffData);
+        const { data: changedFiles } = await octokit.rest.pulls.listFiles({
+            owner,
+            repo,
+            pull_number: pull_number,
+        });
 
-        console.log(diffData)
+        console.log(changedFiles)
 
         core.setOutput("pull-request-body", "yeyeyeyeyye");
     } catch (error) {
