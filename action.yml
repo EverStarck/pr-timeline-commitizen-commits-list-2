@@ -1,0 +1,22 @@
+name: Hello World
+description: Greet someone and record the time
+inputs:
+  github-token:
+    description: Secret GitHub API token to use for making API requests.
+    default: ${{ github.token }}
+    required: true
+  owner:
+    description: Merge item template
+    required: true
+  repo:
+    description: Merge item template
+    required: true
+  pull_number:
+    description: Merge item template
+    required: true
+outputs:
+  pull-request-body:
+    description: 'The pull request number'
+runs:
+  using: node16
+  main: dist/index.js
