@@ -25,6 +25,10 @@ const main = async () => {
          **/
         const octokit = new github.getOctokit(token);
 
+        console.log(owner, "owner");
+        console.log(repo, "repo");
+        console.log(pull_number, "pull_number");
+
         console.log("Hello World! 2");
 
         /**
