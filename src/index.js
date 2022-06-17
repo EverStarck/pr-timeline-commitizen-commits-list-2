@@ -1,83 +1,94 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-
+const core = require("@actions/core");
+const github = require("@actions/github");
 
 const main = async () => {
-    try {
+  try {
+    const token = core.getInput("github-token", { required: true });
+    const owner = core.getInput("owner", { required: true });
+    const repo = core.getInput("repo", { required: true });
+    const pull_number = core.getInput("pull_number", { required: true });
+    const update_body = core.getInput("update_body", { required: true });
 
-        console.log("Hello World!");
-        /**
-         * We need to fetch all the inputs that were provided to our action
-         * and store them in variables for us to use.
-         **/
-        const token = core.getInput('github-token', { required: true });
-        const owner = core.getInput('owner', { required: true });
-        const repo = core.getInput('repo', { required: true });
-        const pull_number = core.getInput('pull_number', { required: true });
+    const octokit = new github.getOctokit(token);
+    // octokit get List commits on a pull request
+    const commits = await octokit.rest.pulls.listCommits({
+      owner,
+      repo,
+      pull_number,
+    });
 
-        /**
-         * Now we need to create an instance of Octokit which will use to call
-         * GitHub's REST API endpoints.
-         * We will pass the token as an argument to the constructor. This token
-         * will be used to authenticate our requests.
-         * You can find all the information about how to use Octokit here:
-         * https://octokit.github.io/rest.js/v18
-         **/
-        const octokit = new github.getOctokit(token);
+    // Filter commits
+    const commitizenKeys = {
+      feat: "Features",
+      fix: "Bug Fixes",
+      perf: "Performance Improvements",
+      docs: "Documentation",
+      test: "Tests",
+      refactor: "Code Refactoring",
+      build: "Internal Workflow",
+      ci: "Internal Workflow",
+      revert: "Reverts",
+      chore: "Chore",
+      style: "Style",
+    };
+    const regex = new RegExp(
+      `^(${Object.keys(commitizenKeys).join("|")})(\\((.+)\\))?: (.+\\S)`
+    );
 
-        console.log("Hello World! 2");
+    const history = {};
 
-        /**
-         * We need to fetch the list of files that were changes in the Pull Request
-         * and store them in a variable.
-         * We use octokit.paginate() to automatically loop over all the pages of the
-         * results.
-         * Reference: https://octokit.github.io/rest.js/v18#pulls-list-files
-         */
-        const { data: changedFiles } = await octokit.rest.pulls.listFiles({
-            owner,
-            repo,
-            pull_number: pull_number,
-        });
+    for (const commit of commits.data) {
+      const match = commit.commit.message.match(regex);
 
-        console.log(changedFiles);
-        
-        console.log("BRRR")
-        
-        const prNumber = github.context.payload.pull_request.number;
-        const xd = JSON.stringify(github.context.payload)
+      if (match) {
+        // Make first letter upper case
+        match[4] = match[4].charAt(0).toUpperCase() + match[4].slice(1);
 
-        console.log(xd, "Xd")
-        console.log(github)
-        console.log({ prNumber })
-
-        /**
-         * Contains the sum of all the additions, deletions, and changes
-         * in all the files in the Pull Request.
-         **/
-        let diffData = {
-            additions: 0,
-            deletions: 0,
-            changes: 0
+        history[match[3] || "General"] = {
+          ...(history[match[3] || "General"] || []),
+          [match[1]]: [
+            ...(history[match[3] || "General"]?.[match[1]] || []),
+            {
+              subject: match[4],
+              sha: commit.sha,
+            },
+          ],
         };
-
-        // Reference for how to use Array.reduce():
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce
-        diffData = changedFiles.reduce((acc, file) => {
-            acc.additions += file.additions;
-            acc.deletions += file.deletions;
-            acc.changes += file.changes;
-            return acc;
-        }, diffData);
-
-        console.log(diffData)
-
-        core.setOutput("pull-request-body", "yeyeyeyeyye");
-    } catch (error) {
-        console.log("error")
-        core.setFailed(error.message);
+      }
     }
-}
+
+    let result = "";
+
+    for (const key in history) {
+      result += `## ${key}\n\n`;
+
+      Object.keys(commitizenKeys).forEach((action) => {
+        if (history[key][action]) {
+          result += `### ${commitizenKeys[action]}\n\n`;
+          history[key][action].forEach((commit) => {
+            result += `- ${commit.subject} (${commit.sha})\n`;
+          });
+          result += "\n";
+        }
+      })
+    }
+
+    // Change pull request body
+    if (update_body) {
+      octokit.rest.pulls.update({
+        owner,
+        repo,
+        pull_number,
+        body: result,
+      });
+    }
+
+    core.setOutput("pull-request-body", result);
+  } catch (error) {
+    console.log("error");
+    core.setFailed(error.message);
+  }
+};
 
 // Call the main function to run the action
 main();
