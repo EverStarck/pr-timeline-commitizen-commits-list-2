@@ -45,9 +45,9 @@ const main = async () => {
         match[4] = match[4].charAt(0).toUpperCase() + match[4].slice(1);
 
         history[match[3] || "General"] = {
-          ...(history[match[3]] || []),
+          ...(history[match[3] || "General"] || []),
           [match[1]]: [
-            ...(history[match[3]]?.[match[1]] || []),
+            ...(history[match[3] || "General"]?.[match[1]] || []),
             {
               subject: match[4],
               sha: commit.sha,
@@ -61,13 +61,16 @@ const main = async () => {
 
     for (const key in history) {
       result += `## ${key}\n\n`;
-      Object.keys(history[key]).forEach((action) => {
-        result += `### ${commitizenKeys[action]}\n\n`;
-        history[key][action].forEach((commit) => {
-          result += `- ${commit.subject} (${commit.sha})\n\n`;
-        });
-      });
-      result += "\n";
+
+      Object.keys(commitizenKeys).forEach((action) => {
+        if (history[key][action]) {
+          result += `### ${commitizenKeys[action]}\n\n`;
+          history[key][action].forEach((commit) => {
+            result += `- ${commit.subject} (${commit.sha})\n`;
+          });
+          result += "\n";
+        }
+      })
     }
 
     // Change pull request body
